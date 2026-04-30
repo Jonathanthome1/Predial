@@ -1159,6 +1159,79 @@ header {
 </head>
 <body>
 
+<!-- TELA DE LOGIN -->
+<div id="loginScreen" style="position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
+  <div style="width: 100%; max-width: 360px; text-align: center;">
+    <div style="margin-bottom: 24px;">
+      <div style="width: 64px; height: 64px; margin: 0 auto 14px; background: var(--orange); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 28px; color: var(--bg);">M</div>
+      <div style="font-family: var(--display); font-size: 22px; letter-spacing: -0.02em; text-transform: uppercase; margin-bottom: 6px;">Monte Castelo</div>
+      <div style="font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em; color: var(--ink-mute); text-transform: uppercase;">Painel · Acesso restrito</div>
+    </div>
+
+    <div style="background: var(--bg-2); border: 1px solid var(--line-2); border-top: 2px solid var(--orange); padding: 24px 22px;">
+      <div style="font-family: var(--mono); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 10px; text-align: left;">Senha</div>
+      <input type="password" id="loginSenha" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="• • • •" style="width: 100%; background: var(--bg); border: 1px solid var(--line-2); border-bottom: 2px solid var(--steel); color: var(--ink); padding: 14px; font-family: var(--sans); font-size: 22px; text-align: center; letter-spacing: 0.4em; font-weight: 600; outline: none;">
+      <div id="loginErro" style="font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red); margin-top: 10px; min-height: 14px;"></div>
+      <button id="loginBtn" style="width: 100%; padding: 14px; margin-top: 14px; background: var(--orange); color: var(--bg); border: none; font-family: var(--mono); font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; font-weight: 600; cursor: pointer;">Entrar</button>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <a href="https://jonathanthome1.github.io/Predial/" style="font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mute); text-decoration: none;">‹ Voltar ao app de chamados</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SENHA = "1234";
+  const screen = document.getElementById('loginScreen');
+  const input = document.getElementById('loginSenha');
+  const btn = document.getElementById('loginBtn');
+  const erro = document.getElementById('loginErro');
+
+  // Já autenticado? Libera direto.
+  if (sessionStorage.getItem('painel_auth') === 'ok') {
+    screen.style.display = 'none';
+    return;
+  }
+
+  // Trava scroll/interação do app por trás
+  document.body.style.overflow = 'hidden';
+
+  function tentar() {
+    const v = (input.value || '').trim();
+    if (!v) {
+      erro.textContent = 'Digite a senha';
+      input.focus();
+      return;
+    }
+    if (v === SENHA) {
+      sessionStorage.setItem('painel_auth', 'ok');
+      erro.textContent = '';
+      btn.textContent = 'Entrando...';
+      btn.disabled = true;
+      setTimeout(() => {
+        screen.style.display = 'none';
+        document.body.style.overflow = '';
+      }, 250);
+    } else {
+      erro.textContent = '✗ Senha incorreta';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.addEventListener('click', tentar);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); tentar(); }
+  });
+
+  // Foca o campo automaticamente
+  setTimeout(() => input.focus(), 100);
+})();
+</script>
+
+
 <main>
   <section class="home-view" id="homeView">
   <header>

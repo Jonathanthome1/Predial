@@ -1338,7 +1338,7 @@ header {
         <span class="live"><span class="live-dot"></span>Em campo</span>
       </div>
       <div class="greeting-text">
-        Salve, <span class="accent">Miguel.</span><br>
+        <span id="greetingHello">Bom dia</span>, <span class="accent">Miguel.</span><br>
         Hoje tem <span class="accent" id="greetingCount">7</span> tarefas.
       </div>
     </div>
@@ -2397,11 +2397,26 @@ document.querySelectorAll('[data-kperiodo]').forEach(c => {
 });
 
 
+
+function getSaudacao() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Bom dia';
+  if (h >= 12 && h < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+function updateGreeting() {
+  const el = document.getElementById('greetingHello');
+  if (el) el.textContent = getSaudacao();
+}
+
+
 function updateClock() {
   document.getElementById('dateLine').textContent = fmtTime(new Date());
 }
 updateClock();
+updateGreeting();
 setInterval(updateClock, 60000);
+setInterval(updateGreeting, 60000);
 
 render();
 </script>

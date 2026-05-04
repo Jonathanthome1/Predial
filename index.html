@@ -1,4 +1,4 @@
-a<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -270,11 +270,6 @@ a<!DOCTYPE html>
       <div style="flex:1;"><div class="hb-title">Nova Solicitação</div><div class="hb-desc">Abrir chamado de manutenção</div></div>
       <span style="color:var(--text-secondary);font-size:20px;">›</span>
     </button>
-    <button class="home-btn" onclick="goTo('s-lista')">
-      <div class="hb-icon" style="background:rgba(245,158,11,0.15);">📋</div>
-      <div style="flex:1;"><div class="hb-title">Chamados</div><div class="hb-desc">Ver e gerenciar todos os chamados</div></div>
-      <span style="color:var(--text-secondary);font-size:20px;">›</span>
-    </button>
     <button class="home-btn area" onclick="goTo('s-areas')">
       <div class="hb-icon" style="background:rgba(16,185,129,0.15);">🏭</div>
       <div style="flex:1;"><div class="hb-title">Requisição da Área</div><div class="hb-desc">Para representantes de cada setor</div></div>
@@ -296,10 +291,28 @@ a<!DOCTYPE html>
   </div>
   <div class="content">
     <div class="card">
-      <div class="card-label">Setor / Local</div>
-      <input type="text" id="novo-setor" placeholder="Ex: Sala 02, Cozinha, Banheiro masculino..." list="setores-list" />
-      <datalist id="setores-list"></datalist>
-      <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">Os setores anteriores aparecem como sugestão</div>
+      <div class="card-label">Setor</div>
+      <select id="novo-setor">
+        <option value="">Selecione o setor...</option>
+        <option value="Administrativo">🏢 Administrativo</option>
+        <option value="Confeitaria">🧁 Confeitaria</option>
+        <option value="Cozinha">🍳 Cozinha</option>
+        <option value="Cozinha Conf.">🍲 Cozinha Conf.</option>
+        <option value="Diretoria">👔 Diretoria</option>
+        <option value="Embalação">📦 Embalação</option>
+        <option value="Expedição">🚛 Expedição</option>
+        <option value="Frota">🚚 Frota</option>
+        <option value="Limpeza">🧹 Limpeza</option>
+        <option value="Panificação">🍞 Panificação</option>
+        <option value="Predial">🏗️ Predial</option>
+        <option value="Recebimento">📥 Recebimento</option>
+        <option value="Refeitório">🍽️ Refeitório</option>
+        <option value="Outro">📍 Outro</option>
+      </select>
+    </div>
+    <div class="card" id="setor-outro-card" style="display:none;">
+      <div class="card-label">Especifique o local</div>
+      <input type="text" id="novo-setor-outro" placeholder="Descreva o local" />
     </div>
     <div class="card">
       <div class="card-label">Solicitante (opcional)</div>
@@ -729,13 +742,19 @@ function goTo(id){
   }
   if(id==='s-novo'){
     document.getElementById('novo-setor').value='';
+    document.getElementById('novo-setor-outro').value='';
+    document.getElementById('setor-outro-card').style.display='none';
     document.getElementById('novo-solicitante').value='';
     document.getElementById('novo-titulo').value='';
     document.getElementById('novo-descricao').value='';
     document.getElementById('novo-prioridade').value='Normal';
     const b=document.getElementById('novo-btn');
     if(b){b.textContent='Abrir chamado ✓';b.disabled=false;}
-    atualizarSetoresDatalist();
+    // Listener pra mostrar campo "Outro" quando selecionado
+    const sel=document.getElementById('novo-setor');
+    sel.onchange=function(){
+      document.getElementById('setor-outro-card').style.display=(sel.value==='Outro')?'block':'none';
+    };
   }
 }
 
@@ -827,14 +846,15 @@ function renderHome(){
   document.getElementById('home-sub').textContent='Total: '+chamados.length+' chamado(s)';
 }
 
-function atualizarSetoresDatalist(){
-  const setores=[...new Set(chamados.map(function(c){return c.setor;}))].filter(Boolean).sort();
-  const dl=document.getElementById('setores-list');
-  if(dl) dl.innerHTML=setores.map(function(s){return '<option value="'+s.replace(/"/g,'&quot;')+'">';}).join('');
-}
+function atualizarSetoresDatalist(){ /* não mais usado - dropdown fixo */ }
 
 async function salvarChamado(){
-  const setor=document.getElementById('novo-setor').value.trim();
+  let setor=document.getElementById('novo-setor').value.trim();
+  if(setor==='Outro'){
+    const outro=document.getElementById('novo-setor-outro').value.trim();
+    if(!outro){alert('Especifique o local.');return;}
+    setor=outro;
+  }
   const solicitante=document.getElementById('novo-solicitante').value.trim();
   const titulo=document.getElementById('novo-titulo').value.trim();
   const descricao=document.getElementById('novo-descricao').value.trim();

@@ -1250,6 +1250,158 @@ header {
   50% { opacity: 0.5; }
 }
 
+
+/* === TOAST DE NOTIFICAÇÃO === */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-left: 4px solid var(--green);
+  padding: 14px 18px 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: toastIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.3s;
+  min-width: 280px;
+}
+.toast:hover {
+  transform: translateX(-4px);
+  border-color: var(--green);
+}
+.toast.removing {
+  animation: toastOut 0.3s forwards;
+}
+@keyframes toastIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes toastOut {
+  to { transform: translateX(120%); opacity: 0; }
+}
+.toast-icon {
+  width: 32px; height: 32px;
+  background: var(--green);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--paper);
+}
+.toast-body { flex: 1; min-width: 0; }
+.toast-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.toast-text {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+  font-weight: 500;
+}
+.toast-meta {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--ink-mute);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.toast-close {
+  background: none; border: none;
+  color: var(--ink-mute);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.toast-close:hover { color: var(--ink); }
+
+/* Badge de notificações no header */
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--red);
+  color: var(--paper);
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--bg);
+  animation: pulseBadge 2s ease-in-out infinite;
+}
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+.notif-bell {
+  position: relative;
+  background: none;
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 14px;
+  margin-right: 10px;
+}
+.notif-bell:hover { border-color: var(--orange); color: var(--orange); }
+
+
+/* === STATUS EXTRAS === */
+.priority-tag.waiting_part { background: var(--blue); color: var(--paper); }
+.priority-tag.waiting_auth { background: #8B6BB8; color: var(--paper); }
+.priority-tag.paused { background: var(--steel); color: var(--paper); }
+
+.order.waiting_part::before { background: var(--blue); }
+.order.waiting_auth::before { background: #8B6BB8; }
+.order.paused::before { background: var(--steel); }
+
+.order.waiting_part .deadline-time,
+.order.waiting_auth .deadline-time,
+.order.paused .deadline-time { color: var(--ink-mute); }
+
+.kanban-card.waiting_part::before { background: var(--blue); }
+.kanban-card.waiting_auth::before { background: #8B6BB8; }
+.kanban-card.paused::before { background: var(--steel); }
+
+.kanban-card-prio.waiting_part { background: var(--blue); color: var(--paper); }
+.kanban-card-prio.waiting_auth { background: #8B6BB8; color: var(--paper); }
+.kanban-card-prio.paused { background: var(--steel); color: var(--paper); }
+
+/* Coluna kanban "Em espera" */
+.kanban-col-dot.waiting { background: var(--blue); }
+
+@media (max-width: 480px) {
+  .toast-container { top: 12px; right: 12px; left: 12px; max-width: none; }
+  .toast { min-width: auto; }
+}
+
 @media (max-width: 480px) {
   .brand-logo-img { height: 40px; }
 }
@@ -1757,10 +1909,31 @@ function typeLabel(t) {
   return { os: 'OS', task: 'TAREFA', prev: 'PREVENTIVA' }[t] || t;
 }
 function statusLabel(s) {
-  return { open: 'Em aberto', progress: 'Em execução', done: 'Concluída' }[s] || s;
+  return { 
+    open: 'Em aberto', 
+    progress: 'Em execução', 
+    done: 'Concluída',
+    waiting_part: 'Aguardando peça',
+    waiting_auth: 'Aguardando autorização',
+    paused: 'Pausada'
+  }[s] || s;
+}
+
+function statusBadge(s) {
+  return {
+    open: '🔴 Em aberto',
+    progress: '🟡 Em execução',
+    done: '🟢 Concluída',
+    waiting_part: '🔵 Aguardando peça',
+    waiting_auth: '🟣 Aguardando autorização',
+    paused: '⏸ Pausada'
+  }[s] || s;
 }
 function deadlineDisplay(d, status) {
   if (status === 'done') return { time: '✓', label: 'Feito' };
+  if (status === 'waiting_part') return { time: '⏳', label: 'Peça' };
+  if (status === 'waiting_auth') return { time: '⏳', label: 'Autoriz.' };
+  if (status === 'paused') return { time: '⏸', label: 'Pausada' };
   const diff = new Date(d) - new Date();
   const h = Math.floor(diff / (1000*60*60));
   const days = Math.floor(h / 24);
@@ -1888,13 +2061,13 @@ function render() {
 
   list.innerHTML = visibleItems.map(o => {
     const dl = deadlineDisplay(o.deadline, o.status);
-    const cls = o.status === 'done' ? 'done' : o.priority;
+    const cls = ['done','waiting_part','waiting_auth','paused'].includes(o.status) ? o.status : o.priority;
     return `
       <div class="order ${cls}" data-id="${o.id}">
         <div class="order-body">
           <div class="order-meta">
             <span class="order-id">${o.id}</span>
-            <span class="priority-tag ${cls}">${o.status === 'done' ? 'OK' : priorityLabel(o.priority)}</span>
+            <span class="priority-tag ${cls}">${o.status === 'done' ? 'OK' : o.status === 'waiting_part' ? 'PEÇA' : o.status === 'waiting_auth' ? 'AUTORIZ.' : o.status === 'paused' ? 'PAUSA' : priorityLabel(o.priority)}</span>
             <span>${typeLabel(o.type)}</span>
             ${o.origem === 'requisicao_area' ? '<span class="req-badge">📨 ' + (o.areaOrigem || 'ÁREA') + '</span>' : ''}
             ${o.status === 'progress' ? '<span style="color: var(--orange);">● EM EXECUÇÃO</span>' : ''}
@@ -2074,7 +2247,7 @@ function openDetail(id) {
   const o = orders.find(x => x.id === id);
   if (!o) return;
   const dl = deadlineDisplay(o.deadline, o.status);
-  const cls = o.status === 'done' ? 'done' : o.priority;
+  const cls = ['done','waiting_part','waiting_auth','paused'].includes(o.status) ? o.status : o.priority;
 
   document.getElementById('detailContent').innerHTML = `
     <div class="modal-head">
@@ -2088,7 +2261,7 @@ function openDetail(id) {
     </div>
     <div class="modal-body">
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 4px;">
-        <span class="priority-tag ${cls}" style="font-family:var(--mono); font-size:10px; letter-spacing:0.2em;">${o.status === 'done' ? 'CONCLUÍDA' : priorityLabel(o.priority)}</span>
+        <span class="priority-tag ${cls}" style="font-family:var(--mono); font-size:10px; letter-spacing:0.2em;">${o.status === 'done' ? 'CONCLUÍDA' : o.status === 'waiting_part' ? 'AGUARDA PEÇA' : o.status === 'waiting_auth' ? 'AGUARDA AUTORIZAÇÃO' : o.status === 'paused' ? 'PAUSADA' : priorityLabel(o.priority)}</span>
         <span style="padding: 2px 8px; background: var(--bg-2); border: 1px solid var(--line-2); font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: ${o.status==='progress' ? 'var(--orange)' : 'var(--ink-mute)'};">${statusLabel(o.status)}</span>
       </div>
 
@@ -2146,9 +2319,15 @@ function openDetail(id) {
       <div class="detail-section">
         <div class="detail-label">Atualizar status</div>
         <div class="status-actions">
-          <button class="status-btn" data-act="open" data-id="${o.id}">Em aberto</button>
-          <button class="status-btn" data-act="progress" data-id="${o.id}">Em execução</button>
-          <button class="status-btn done" data-act="done" data-id="${o.id}">Concluir ✓</button>
+          <button class="status-btn" data-act="open" data-id="${o.id}">🔴 Em aberto</button>
+          <button class="status-btn" data-act="progress" data-id="${o.id}">🟡 Em execução</button>
+          <button class="status-btn done" data-act="done" data-id="${o.id}">🟢 Concluir ✓</button>
+        </div>
+        <div class="detail-label" style="margin-top:14px;">Status de espera</div>
+        <div class="status-actions">
+          <button class="status-btn" data-act="waiting_part" data-id="${o.id}" style="background: rgba(86, 135, 168, 0.15); color: var(--blue); border-color: rgba(86, 135, 168, 0.4);">🔵 Aguardando peça</button>
+          <button class="status-btn" data-act="waiting_auth" data-id="${o.id}" style="background: rgba(139, 107, 184, 0.15); color: #B595D8; border-color: rgba(139, 107, 184, 0.4);">🟣 Aguard. autorização</button>
+          <button class="status-btn" data-act="paused" data-id="${o.id}" style="background: rgba(79, 79, 79, 0.3); color: var(--ink); border-color: var(--steel);">⏸ Pausar</button>
         </div>
       </div>` : ''}
 
@@ -2209,7 +2388,7 @@ function openDetail(id) {
       });
       // Sincroniza com Firebase se for uma demanda vinda de lá
       if (o2.fromFirebase && o2.firestoreId) {
-        const fbStatus = { open: 'aberto', progress: 'andamento', done: 'concluido' }[b.dataset.act];
+        const fbStatus = { open: 'aberto', progress: 'andamento', done: 'concluido', waiting_part: 'aguardando_peca', waiting_auth: 'aguardando_autorizacao', paused: 'pausada' }[b.dataset.act];
         try {
           await updateDoc(doc(db, 'chamados', o2.firestoreId), { status: fbStatus });
         } catch (err) {
@@ -2306,7 +2485,7 @@ function renderKanban() {
     }
     
     el.innerHTML = visible.map(o => {
-      const cls = o.status === 'done' ? 'done' : o.priority;
+      const cls = ['done','waiting_part','waiting_auth','paused'].includes(o.status) ? o.status : o.priority;
       const prioLabel = { crit: 'CRÍT', high: 'ALTA', med: 'MÉDIA', low: 'BAIXA' }[o.priority] || '';
       const typeLabel = { os: 'OS', task: 'TAREFA', prev: 'PREV' }[o.type] || '';
       return `
@@ -2387,7 +2566,7 @@ document.querySelectorAll('.kanban-col-body').forEach(body => {
       });
       // Sincroniza com Firebase se for de lá
       if (o.fromFirebase && o.firestoreId) {
-        const fbStatus = { open: 'aberto', progress: 'andamento', done: 'concluido' }[newStatus];
+        const fbStatus = { open: 'aberto', progress: 'andamento', done: 'concluido', waiting_part: 'aguardando_peca', waiting_auth: 'aguardando_autorizacao', paused: 'pausada' }[newStatus];
         try {
           await updateDoc(doc(db, 'chamados', o.firestoreId), { status: fbStatus });
         } catch (err) {
@@ -2482,12 +2661,86 @@ function updateGreeting() {
 
 
 // === FIREBASE: escutar coleção 'chamados' em tempo real ===
+
+// === SISTEMA DE NOTIFICAÇÕES ===
+let firstFirebaseLoad = true;
+let knownFirebaseIds = new Set();
+let toastIdCounter = 0;
+
+function mostrarToast(titulo, texto, meta) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  
+  const id = 'toast_' + (++toastIdCounter);
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.id = id;
+  toast.innerHTML = `
+    <div class="toast-icon">📨</div>
+    <div class="toast-body">
+      <div class="toast-title">${titulo}</div>
+      <div class="toast-text">${texto}</div>
+      ${meta ? '<div class="toast-meta">' + meta + '</div>' : ''}
+    </div>
+    <button class="toast-close" onclick="event.stopPropagation(); fecharToast('${id}')">✕</button>
+  `;
+  
+  // Click no toast scrolla até o card
+  toast.addEventListener('click', () => {
+    fecharToast(id);
+    // Garantir que estamos na home
+    if (document.body.classList.contains('kanban-mode')) {
+      document.getElementById('navHome').click();
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  
+  container.appendChild(toast);
+  
+  // Auto-remove após 6s
+  setTimeout(() => fecharToast(id), 6000);
+  
+  // Som leve (opcional - usa Web Audio API)
+  tocarSomNotificacao();
+}
+
+function fecharToast(id) {
+  const toast = document.getElementById(id);
+  if (!toast) return;
+  toast.classList.add('removing');
+  setTimeout(() => toast.remove(), 300);
+}
+
+function tocarSomNotificacao() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    // Silenciar erros de áudio
+  }
+}
+
+window.fecharToast = fecharToast;
+
+
 function statusToOrder(status) {
   // Converter status do Jonathan/área pro padrão do painel
   const map = {
     'aberto': 'open',
     'andamento': 'progress',
-    'concluido': 'done'
+    'concluido': 'done',
+    'aguardando_peca': 'waiting_part',
+    'aguardando_autorizacao': 'waiting_auth',
+    'pausada': 'paused'
   };
   return map[status] || 'open';
 }
@@ -2575,6 +2828,35 @@ function syncFirebaseOrders() {
 
 // Inicia o listener
 onSnapshot(collection(db, 'chamados'), (snap) => {
+  // Detectar adições novas (skip da primeira carga)
+  if (!firstFirebaseLoad) {
+    snap.docChanges().forEach((change) => {
+      if (change.type === 'added') {
+        const data = change.doc.data();
+        const id = change.doc.id;
+        if (!knownFirebaseIds.has(id)) {
+          // É de fato uma nova! Mostrar toast
+          if (data.origem === 'requisicao_area') {
+            mostrarToast(
+              'Nova requisição',
+              `<strong>${data.areaOrigem || data.setor}</strong>: ${data.titulo}`,
+              data.solicitante ? 'Por: ' + data.solicitante : data.prioridade
+            );
+          } else {
+            mostrarToast(
+              'Novo chamado',
+              `<strong>${data.setor}</strong>: ${data.titulo}`,
+              data.solicitante ? 'Por: ' + data.solicitante : data.prioridade
+            );
+          }
+        }
+      }
+    });
+  }
+  
+  // Atualizar lista de IDs conhecidos
+  knownFirebaseIds = new Set(snap.docs.map(d => d.id));
+  
   firebaseOrders = snap.docs.map(d => {
     const data = d.data();
     return fbToOrder({ ...data, firestoreId: d.id });
@@ -2582,6 +2864,8 @@ onSnapshot(collection(db, 'chamados'), (snap) => {
   // Ordenar mais recentes primeiro
   firebaseOrders.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   syncFirebaseOrders();
+  
+  firstFirebaseLoad = false;
 });
 
 
@@ -2595,5 +2879,6 @@ setInterval(updateGreeting, 60000);
 
 render();
 </script>
+<div class="toast-container" id="toastContainer"></div>
 </body>
 </html>

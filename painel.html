@@ -1221,6 +1221,35 @@ header {
 .brand-mark .brand-sub {
   margin-top: 0;
 }
+
+.req-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  background: var(--green);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+}
+.fb-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  background: var(--orange);
+  color: var(--bg);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  animation: pulseFb 2s ease-in-out infinite;
+}
+@keyframes pulseFb {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 @media (max-width: 480px) {
   .brand-logo-img { height: 40px; }
 }
@@ -1561,7 +1590,27 @@ header {
   <div class="modal" id="detailContent"></div>
 </div>
 
-<script>
+<script type="module">
+// === FIREBASE INTEGRATION ===
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCsV4z3OCBlohH5GOymaM6-DYp-0H-_kUc",
+  authDomain: "manutencao-predial-62fa5.firebaseapp.com",
+  projectId: "manutencao-predial-62fa5",
+  storageBucket: "manutencao-predial-62fa5.firebasestorage.app",
+  messagingSenderId: "368066193801",
+  appId: "1:368066193801:web:b448a6bbcb17b045fed958"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+// Array para guardar IDs das ordens vindas do Firebase (pra poder filtrar/atualizar)
+let firebaseOrders = [];
+
+
 const today = new Date();
 const fmtTime = (d) => {
   const dt = new Date(d);
@@ -1847,6 +1896,7 @@ function render() {
             <span class="order-id">${o.id}</span>
             <span class="priority-tag ${cls}">${o.status === 'done' ? 'OK' : priorityLabel(o.priority)}</span>
             <span>${typeLabel(o.type)}</span>
+            ${o.origem === 'requisicao_area' ? '<span class="req-badge">📨 ' + (o.areaOrigem || 'ÁREA') + '</span>' : ''}
             ${o.status === 'progress' ? '<span style="color: var(--orange);">● EM EXECUÇÃO</span>' : ''}
           </div>
           <div class="order-title">${o.title}</div>
@@ -2150,15 +2200,25 @@ function openDetail(id) {
     b.addEventListener('click', () => modalDetail.classList.remove('open'));
   });
   document.querySelectorAll('#detailContent [data-act]').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
       const o2 = orders.find(x => x.id === b.dataset.id);
       o2.status = b.dataset.act;
       o2.timeline.push({
         time: 'Agora',
         text: `Status alterado para "${statusLabel(b.dataset.act)}" por Miguel K.`
       });
+      // Sincroniza com Firebase se for uma demanda vinda de lá
+      if (o2.fromFirebase && o2.firestoreId) {
+        const fbStatus = { open: 'aberto', progress: 'andamento', done: 'concluido' }[b.dataset.act];
+        try {
+          await updateDoc(doc(db, 'chamados', o2.firestoreId), { status: fbStatus });
+        } catch (err) {
+          console.error('Erro ao sincronizar Firebase:', err);
+        }
+      }
       modalDetail.classList.remove('open');
       render();
+      if (document.body.classList.contains('kanban-mode')) renderKanban();
     });
   });
   const addBtn = document.getElementById('addComment');
@@ -2255,6 +2315,7 @@ function renderKanban() {
             <span class="kanban-card-id">${o.id}</span>
             <span class="kanban-card-prio ${cls}">${o.status === 'done' ? 'OK' : prioLabel}</span>
             <span>${typeLabel}</span>
+            ${o.origem === 'requisicao_area' ? '<span class="req-badge" style="font-size:7px;padding:1px 4px;">📨</span>' : ''}
           </div>
           <div class="kanban-card-title">${o.title}</div>
           <div class="kanban-card-footer">
@@ -2310,7 +2371,7 @@ document.querySelectorAll('.kanban-col-body').forEach(body => {
       body.closest('.kanban-col').classList.remove('drag-over');
     }
   });
-  body.addEventListener('drop', (e) => {
+  body.addEventListener('drop', async (e) => {
     e.preventDefault();
     body.closest('.kanban-col').classList.remove('drag-over');
     const id = e.dataTransfer.getData('text/plain');
@@ -2324,8 +2385,16 @@ document.querySelectorAll('.kanban-col-body').forEach(body => {
         time: 'Agora',
         text: `Status alterado para "${statusName}" via Kanban`
       });
+      // Sincroniza com Firebase se for de lá
+      if (o.fromFirebase && o.firestoreId) {
+        const fbStatus = { open: 'aberto', progress: 'andamento', done: 'concluido' }[newStatus];
+        try {
+          await updateDoc(doc(db, 'chamados', o.firestoreId), { status: fbStatus });
+        } catch (err) {
+          console.error('Erro ao sincronizar:', err);
+        }
+      }
       renderKanban();
-      // Re-render home também
       render();
     }
   });
@@ -2408,6 +2477,112 @@ function updateGreeting() {
   const el = document.getElementById('greetingHello');
   if (el) el.textContent = getSaudacao();
 }
+
+
+
+
+// === FIREBASE: escutar coleção 'chamados' em tempo real ===
+function statusToOrder(status) {
+  // Converter status do Jonathan/área pro padrão do painel
+  const map = {
+    'aberto': 'open',
+    'andamento': 'progress',
+    'concluido': 'done'
+  };
+  return map[status] || 'open';
+}
+
+function prioToOrder(prioridade) {
+  const map = {
+    'Urgente': 'crit',
+    'Alta': 'high',
+    'Normal': 'med'
+  };
+  return map[prioridade] || 'med';
+}
+
+function parseDataBR(dataStr) {
+  if (!dataStr) return null;
+  const parts = dataStr.split('/');
+  if (parts.length !== 3) return null;
+  return new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+}
+
+function fbToOrder(doc) {
+  // Converte um documento do Firebase pro formato `orders` que o painel usa
+  const c = doc;
+  const dataAbertura = parseDataBR(c.dataAbertura);
+  const horaAb = (c.horaAbertura || '00:00').split(':');
+  let createdAt = dataAbertura || new Date();
+  if (dataAbertura && horaAb.length === 2) {
+    createdAt = new Date(dataAbertura.getFullYear(), dataAbertura.getMonth(), dataAbertura.getDate(), 
+                          parseInt(horaAb[0]) || 0, parseInt(horaAb[1]) || 0);
+  }
+  
+  // Deadline: se tem dataConclusao, usar, senão dataAbertura + 7 dias
+  let deadline = c.dataConclusao ? parseDataBR(c.dataConclusao) : null;
+  if (!deadline && dataAbertura) {
+    deadline = new Date(dataAbertura.getTime() + 7 * 24 * 60 * 60 * 1000);
+  }
+  if (!deadline) deadline = new Date();
+  
+  // Timeline: converter histórico
+  const timeline = (c.historico || []).map(h => ({
+    time: h.data + (h.hora ? ' · ' + h.hora : ''),
+    text: h.acao + (h.obs ? ' — ' + h.obs : '')
+  }));
+  
+  // Determinar tipo (OS ou tarefa)
+  const tipo = c.origem === 'requisicao_area' ? 'os' : 'os';
+  
+  // ID amigável
+  const shortId = (c.firestoreId || '').substring(0, 8).toUpperCase();
+  const prefix = c.origem === 'requisicao_area' ? 'REQ' : 'OS';
+  const displayId = prefix + '-' + shortId;
+  
+  return {
+    id: displayId,
+    firestoreId: c.firestoreId,
+    type: tipo,
+    title: c.titulo || '(sem título)',
+    priority: prioToOrder(c.prioridade),
+    status: statusToOrder(c.status),
+    local: c.setor || c.areaOrigem || 'Não especificado',
+    assignee: c.solicitante || 'Não atribuído',
+    deadline: deadline,
+    desc: c.descricao || '—',
+    timeline: timeline,
+    comments: [],
+    createdAt: createdAt,
+    fromFirebase: true,
+    origem: c.origem || 'chamado',
+    areaOrigem: c.areaOrigem || null,
+    solicitante: c.solicitante || ''
+  };
+}
+
+function syncFirebaseOrders() {
+  // Remove ordens antigas do Firebase
+  orders = orders.filter(o => !o.fromFirebase);
+  // Adiciona as novas no início
+  orders = [...firebaseOrders, ...orders];
+  // Re-renderiza
+  render();
+  if (document.body.classList.contains('kanban-mode')) {
+    renderKanban();
+  }
+}
+
+// Inicia o listener
+onSnapshot(collection(db, 'chamados'), (snap) => {
+  firebaseOrders = snap.docs.map(d => {
+    const data = d.data();
+    return fbToOrder({ ...data, firestoreId: d.id });
+  });
+  // Ordenar mais recentes primeiro
+  firebaseOrders.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  syncFirebaseOrders();
+});
 
 
 function updateClock() {

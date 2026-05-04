@@ -1478,6 +1478,210 @@ header {
 .prazo-quick-btn:hover { color: var(--ink); border-color: var(--orange); }
 
 
+
+/* === AGENDA / CALENDÁRIO === */
+.agenda-view {
+  display: none;
+  padding: 0;
+}
+.agenda-view.active { display: block; }
+
+body.agenda-mode .home-view { display: none; }
+body.agenda-mode .kanban-view { display: none; }
+body.agenda-mode .fab { display: none; }
+
+.agenda-toolbar {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.agenda-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+.agenda-title {
+  font-family: var(--display);
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.agenda-title-meta {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.agenda-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.agenda-nav-btn {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.agenda-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.agenda-nav-month {
+  flex: 1;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.agenda-today-btn {
+  background: var(--orange);
+  color: var(--bg);
+  border: none;
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  width: 100%;
+}
+.agenda-today-btn:hover { background: var(--orange-soft); color: var(--paper); }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--line-2);
+  gap: 1px;
+  padding: 0 22px;
+  margin-top: 14px;
+}
+.calendar-weekday {
+  background: var(--bg);
+  padding: 10px 6px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  font-weight: 600;
+}
+.calendar-day {
+  background: var(--bg-2);
+  min-height: 92px;
+  padding: 6px 6px 4px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+.calendar-day:hover { background: var(--bg-3); }
+.calendar-day.other-month {
+  background: var(--bg);
+  opacity: 0.4;
+}
+.calendar-day.today {
+  background: var(--bg-3);
+  box-shadow: inset 0 0 0 2px var(--orange);
+}
+.calendar-day.selected {
+  background: var(--bg-3);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.calendar-day-num {
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+.calendar-day.today .calendar-day-num { color: var(--orange); }
+.calendar-day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;
+}
+.calendar-event {
+  font-size: 9px;
+  padding: 1px 4px;
+  background: var(--steel);
+  color: var(--paper);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
+}
+.calendar-event.crit { background: var(--red); }
+.calendar-event.high { background: var(--orange); color: var(--bg); }
+.calendar-event.med { background: var(--yellow); color: var(--bg); }
+.calendar-event.low { background: var(--blue); }
+.calendar-event.done { background: var(--green); }
+.calendar-event.waiting_part { background: var(--blue); }
+.calendar-event.waiting_auth { background: #8B6BB8; }
+.calendar-event.paused { background: var(--steel); }
+.calendar-event-more {
+  font-size: 9px;
+  color: var(--ink-mute);
+  font-family: var(--mono);
+  letter-spacing: 0.1em;
+  padding: 1px 4px;
+}
+
+/* Lista de demandas do dia selecionado */
+.day-detail {
+  border-top: 1px solid var(--line-2);
+  padding: 18px 22px;
+  background: var(--bg);
+}
+.day-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+.day-detail-title {
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.day-detail-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.day-orders { display: flex; flex-direction: column; gap: 0; }
+
+@media (max-width: 600px) {
+  .calendar-grid { padding: 0 8px; }
+  .calendar-day { min-height: 70px; padding: 4px; }
+  .calendar-day-num { font-size: 12px; }
+  .calendar-event { font-size: 8px; padding: 1px 3px; }
+  .agenda-toolbar { padding: 12px 16px; }
+  .day-detail { padding: 16px; }
+}
+
+
 @media (max-width: 480px) {
   .toast-container { top: 12px; right: 12px; left: 12px; max-width: none; }
   .toast { min-width: auto; }
@@ -1727,6 +1931,31 @@ header {
     </div>
   </section>
 
+
+  <!-- AGENDA VIEW -->
+  <section class="agenda-view" id="agendaView">
+    <div class="agenda-toolbar">
+      <div class="agenda-title-row">
+        <div class="agenda-title">Agenda</div>
+        <div class="agenda-title-meta" id="agendaMeta">— demandas no mês</div>
+      </div>
+      <div class="agenda-nav">
+        <button class="agenda-nav-btn" id="agendaPrev">‹ Mês ant.</button>
+        <div class="agenda-nav-month" id="agendaMonthLabel">—</div>
+        <button class="agenda-nav-btn" id="agendaNext">Próx. mês ›</button>
+      </div>
+      <button class="agenda-today-btn" id="agendaTodayBtn">Voltar para hoje</button>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="day-detail" id="dayDetail">
+      <div class="day-detail-head">
+        <div class="day-detail-title" id="dayDetailTitle">Selecione um dia</div>
+        <div class="day-detail-meta" id="dayDetailMeta"></div>
+      </div>
+      <div class="day-orders" id="dayOrders"></div>
+    </div>
+  </section>
+
 </main>
 
 <button class="fab" id="fabNew" aria-label="Nova demanda">+</button>
@@ -1736,7 +1965,7 @@ header {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>
     Início
   </button>
-  <button class="nav-item">
+  <button class="nav-item" id="navAgenda">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="1"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
     Agenda
   </button>
@@ -2298,6 +2527,10 @@ function render() {
   // Se kanban está ativo, atualiza ele também
   if (document.body.classList.contains('kanban-mode')) {
     renderKanban();
+  }
+  // Se agenda está ativa, atualiza também
+  if (document.body.classList.contains('agenda-mode')) {
+    renderAgenda();
   }
 }
 
@@ -3065,6 +3298,258 @@ onSnapshot(collection(db, 'chamados'), (snap) => {
   
   firstFirebaseLoad = false;
 });
+
+
+
+// ============ AGENDA / CALENDÁRIO ============
+const agendaState = {
+  ano: new Date().getFullYear(),
+  mes: new Date().getMonth(),
+  diaSelecionado: new Date()
+};
+
+const NOMES_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const NOMES_DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function mesmoDia(d1, d2) {
+  if (!d1 || !d2) return false;
+  const a = new Date(d1), b = new Date(d2);
+  return a.getFullYear() === b.getFullYear()
+      && a.getMonth() === b.getMonth()
+      && a.getDate() === b.getDate();
+}
+
+function renderAgenda() {
+  const ano = agendaState.ano;
+  const mes = agendaState.mes;
+  const hoje = new Date();
+  
+  // Atualizar label
+  document.getElementById('agendaMonthLabel').textContent = `${NOMES_MESES[mes]} ${ano}`;
+  
+  // Demandas com prazo neste mês
+  const demandasMes = orders.filter(o => {
+    if (!o.deadline) return false;
+    const d = new Date(o.deadline);
+    return d.getFullYear() === ano && d.getMonth() === mes;
+  });
+  document.getElementById('agendaMeta').textContent = demandasMes.length + ' demandas no mês';
+  
+  // Construir grid
+  const grid = document.getElementById('calendarGrid');
+  let html = '';
+  
+  // Cabeçalho dos dias da semana
+  NOMES_DIAS_SEMANA.forEach(dia => {
+    html += `<div class="calendar-weekday">${dia}</div>`;
+  });
+  
+  // Primeiro dia do mês e quantos dias tem
+  const primeiroDia = new Date(ano, mes, 1);
+  const ultimoDia = new Date(ano, mes + 1, 0);
+  const totalDias = ultimoDia.getDate();
+  const diaSemanaInicio = primeiroDia.getDay(); // 0=Dom, 1=Seg...
+  
+  // Dias do mês anterior pra completar a primeira semana
+  const ultimoDiaMesAnterior = new Date(ano, mes, 0).getDate();
+  for (let i = diaSemanaInicio - 1; i >= 0; i--) {
+    const dia = ultimoDiaMesAnterior - i;
+    const data = new Date(ano, mes - 1, dia);
+    html += renderCalendarDay(data, true);
+  }
+  
+  // Dias do mês atual
+  for (let dia = 1; dia <= totalDias; dia++) {
+    const data = new Date(ano, mes, dia);
+    html += renderCalendarDay(data, false);
+  }
+  
+  // Completar a última semana com dias do próximo mês
+  const totalCelulas = diaSemanaInicio + totalDias;
+  const restoSemana = (7 - (totalCelulas % 7)) % 7;
+  for (let dia = 1; dia <= restoSemana; dia++) {
+    const data = new Date(ano, mes + 1, dia);
+    html += renderCalendarDay(data, true);
+  }
+  
+  grid.innerHTML = html;
+  
+  // Bind cliques
+  grid.querySelectorAll('.calendar-day').forEach(el => {
+    el.addEventListener('click', () => {
+      const iso = el.dataset.iso;
+      if (!iso) return;
+      agendaState.diaSelecionado = new Date(iso);
+      renderAgenda();
+      renderDayDetail();
+    });
+  });
+  
+  renderDayDetail();
+}
+
+function renderCalendarDay(data, otherMonth) {
+  const hoje = new Date();
+  const ehHoje = mesmoDia(data, hoje);
+  const ehSelecionado = mesmoDia(data, agendaState.diaSelecionado);
+  
+  // Demandas com prazo neste dia
+  const demandasDoDia = orders.filter(o => {
+    if (!o.deadline) return false;
+    return mesmoDia(o.deadline, data);
+  });
+  
+  // Ordenar: primeiro críticas, depois por prioridade
+  demandasDoDia.sort((a, b) => {
+    const order = { crit: 0, high: 1, med: 2, low: 3 };
+    return (order[a.priority] || 9) - (order[b.priority] || 9);
+  });
+  
+  let cls = 'calendar-day';
+  if (otherMonth) cls += ' other-month';
+  if (ehHoje) cls += ' today';
+  if (ehSelecionado) cls += ' selected';
+  
+  // ISO date pra usar no click
+  const iso = data.toISOString();
+  
+  let eventsHtml = '';
+  const maxVisible = 3;
+  demandasDoDia.slice(0, maxVisible).forEach(d => {
+    const eventCls = d.status === 'done' ? 'done' 
+                   : ['waiting_part','waiting_auth','paused'].includes(d.status) ? d.status
+                   : d.priority;
+    const titleEsc = (d.title || '').replace(/"/g, '&quot;');
+    eventsHtml += `<div class="calendar-event ${eventCls}" title="${titleEsc}">${titleEsc}</div>`;
+  });
+  if (demandasDoDia.length > maxVisible) {
+    eventsHtml += `<div class="calendar-event-more">+ ${demandasDoDia.length - maxVisible} mais</div>`;
+  }
+  
+  return `
+    <div class="${cls}" data-iso="${iso}">
+      <div class="calendar-day-num">${data.getDate()}</div>
+      <div class="calendar-day-events">${eventsHtml}</div>
+    </div>
+  `;
+}
+
+function renderDayDetail() {
+  const data = agendaState.diaSelecionado;
+  if (!data) return;
+  
+  const dataFmt = `${NOMES_DIAS_SEMANA[data.getDay()]} · ${String(data.getDate()).padStart(2,'0')} ${NOMES_MESES[data.getMonth()].toUpperCase().slice(0,3)} ${data.getFullYear()}`;
+  document.getElementById('dayDetailTitle').textContent = dataFmt;
+  
+  const demandasDoDia = orders.filter(o => {
+    if (!o.deadline) return false;
+    return mesmoDia(o.deadline, data);
+  });
+  
+  // Ordenar por prioridade
+  demandasDoDia.sort((a, b) => {
+    if (a.status === 'done' && b.status !== 'done') return 1;
+    if (a.status !== 'done' && b.status === 'done') return -1;
+    const order = { crit: 0, high: 1, med: 2, low: 3 };
+    return (order[a.priority] || 9) - (order[b.priority] || 9);
+  });
+  
+  document.getElementById('dayDetailMeta').textContent = demandasDoDia.length + ' demanda(s)';
+  
+  const list = document.getElementById('dayOrders');
+  if (!demandasDoDia.length) {
+    list.innerHTML = `
+      <div style="padding: 30px 0; text-align: center; color: var(--ink-mute); font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;">
+        Nenhuma demanda para este dia
+      </div>
+    `;
+    return;
+  }
+  
+  list.innerHTML = demandasDoDia.map(o => {
+    const dl = deadlineDisplay(o.deadline, o.status);
+    const cls = ['done','waiting_part','waiting_auth','paused'].includes(o.status) ? o.status : o.priority;
+    const prioLabel = o.status === 'done' ? 'OK' 
+                    : o.status === 'waiting_part' ? 'PEÇA'
+                    : o.status === 'waiting_auth' ? 'AUTORIZ.'
+                    : o.status === 'paused' ? 'PAUSA'
+                    : priorityLabel(o.priority);
+    return `
+      <div class="order ${cls}" data-id="${o.id}">
+        <div class="order-body">
+          <div class="order-meta">
+            <span class="order-id">${o.id}</span>
+            <span class="priority-tag ${cls}">${prioLabel}</span>
+            <span>${typeLabel(o.type)}</span>
+            ${o.origem === 'requisicao_area' ? '<span class="req-badge">📨 ' + (o.areaOrigem || 'ÁREA') + '</span>' : ''}
+          </div>
+          <div class="order-title">${o.title}</div>
+          <div class="order-info">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>${o.local}</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2"/></svg>${o.assignee}</span>
+          </div>
+        </div>
+        <div class="order-deadline">
+          <div class="deadline-time">${dl.time}</div>
+          <div class="deadline-label">${dl.label}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  list.querySelectorAll('.order').forEach(el => {
+    el.addEventListener('click', () => openDetail(el.dataset.id));
+  });
+}
+
+// Navegação de mês
+document.getElementById('agendaPrev').addEventListener('click', () => {
+  agendaState.mes--;
+  if (agendaState.mes < 0) { agendaState.mes = 11; agendaState.ano--; }
+  renderAgenda();
+});
+document.getElementById('agendaNext').addEventListener('click', () => {
+  agendaState.mes++;
+  if (agendaState.mes > 11) { agendaState.mes = 0; agendaState.ano++; }
+  renderAgenda();
+});
+document.getElementById('agendaTodayBtn').addEventListener('click', () => {
+  const hoje = new Date();
+  agendaState.ano = hoje.getFullYear();
+  agendaState.mes = hoje.getMonth();
+  agendaState.diaSelecionado = hoje;
+  renderAgenda();
+});
+
+// Atualizar switchView pra suportar agenda
+const switchViewOriginal = switchView;
+window.switchView = function(view) {
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  document.body.classList.remove('kanban-mode', 'agenda-mode');
+  document.getElementById('kanbanView').classList.remove('active');
+  document.getElementById('agendaView').classList.remove('active');
+  
+  if (view === 'kanban') {
+    document.body.classList.add('kanban-mode');
+    document.getElementById('kanbanView').classList.add('active');
+    document.getElementById('navKanban').classList.add('active');
+    renderKanban();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  } else if (view === 'agenda') {
+    document.body.classList.add('agenda-mode');
+    document.getElementById('agendaView').classList.add('active');
+    document.getElementById('navAgenda').classList.add('active');
+    renderAgenda();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  } else {
+    document.getElementById('navHome').classList.add('active');
+  }
+};
+
+document.getElementById('navAgenda').addEventListener('click', () => switchView('agenda'));
+// Re-bind home e kanban (foram setados antes)
+document.getElementById('navHome').addEventListener('click', () => switchView('home'));
+document.getElementById('navKanban').addEventListener('click', () => switchView('kanban'));
 
 
 function updateClock() {

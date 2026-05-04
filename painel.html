@@ -1397,6 +1397,87 @@ header {
 /* Coluna kanban "Em espera" */
 .kanban-col-dot.waiting { background: var(--blue); }
 
+
+.prazo-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+}
+.prazo-current-text {
+  font-size: 14px;
+  line-height: 1.5;
+  flex: 1;
+}
+.prazo-edit-btn {
+  background: none;
+  border: 1px solid var(--line-2);
+  color: var(--ink-mute);
+  padding: 6px 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.prazo-edit-btn:hover { color: var(--ink); border-color: var(--orange); }
+.prazo-edit {
+  margin-top: 4px;
+}
+.prazo-input-wrap {
+  display: flex;
+  gap: 6px;
+}
+.prazo-input {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-bottom: 2px solid var(--steel);
+  color: var(--ink);
+  padding: 10px 12px;
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+  color-scheme: dark;
+}
+.prazo-input:focus { border-bottom-color: var(--orange); }
+.prazo-save-btn {
+  background: var(--orange);
+  color: var(--bg);
+  border: none;
+  padding: 0 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.prazo-save-btn:hover { background: var(--orange-soft); color: var(--paper); }
+.prazo-quick {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.prazo-quick-btn {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  color: var(--ink-mute);
+  padding: 5px 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.prazo-quick-btn:hover { color: var(--ink); border-color: var(--orange); }
+
+
 @media (max-width: 480px) {
   .toast-container { top: 12px; right: 12px; left: 12px; max-width: none; }
   .toast { min-width: auto; }
@@ -1902,6 +1983,104 @@ function saveAssignee(orderId) {
 }
 
 
+
+// === EDITOR DE PRAZO ===
+function toLocalDatetime(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  // Formatar pra YYYY-MM-DDTHH:mm (formato datetime-local)
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+
+function bindPrazoEditor(orderId) {
+  const safeId = orderId.replace(/[^a-zA-Z0-9]/g, '_');
+  const editBtn = document.querySelector('[data-edit-prazo="' + orderId + '"]');
+  const saveBtn = document.querySelector('[data-save-prazo="' + orderId + '"]');
+  const input = document.querySelector('[data-prazo-input="' + orderId + '"]');
+  const viewBlock = document.getElementById('prazoView_' + safeId);
+  const editBlock = document.getElementById('prazoEdit_' + safeId);
+
+  if (!editBtn || !saveBtn || !input) return;
+
+  editBtn.addEventListener('click', () => {
+    viewBlock.style.display = 'none';
+    editBlock.style.display = 'block';
+    input.focus();
+  });
+
+  saveBtn.addEventListener('click', () => savePrazo(orderId, input.value));
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      savePrazo(orderId, input.value);
+    } else if (e.key === 'Escape') {
+      viewBlock.style.display = 'flex';
+      editBlock.style.display = 'none';
+    }
+  });
+
+  // Atalhos rápidos
+  document.querySelectorAll('[data-prazo-quick="' + orderId + '"]').forEach(b => {
+    b.addEventListener('click', () => {
+      const q = b.dataset.quick;
+      if (q === 'cancel') {
+        viewBlock.style.display = 'flex';
+        editBlock.style.display = 'none';
+        return;
+      }
+      const now = new Date();
+      let target;
+      if (q === 'hoje') {
+        target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
+      } else if (q === 'amanha') {
+        target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 18, 0, 0);
+      } else if (q === '3d') {
+        target = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+      } else if (q === 'semana') {
+        target = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      }
+      if (target) savePrazo(orderId, toLocalDatetime(target));
+    });
+  });
+}
+
+async function savePrazo(orderId, valor) {
+  if (!valor) return;
+  const o = orders.find(x => x.id === orderId);
+  if (!o) return;
+
+  const novaData = new Date(valor);
+  if (isNaN(novaData.getTime())) return;
+
+  const oldDeadline = o.deadline ? fmtTime(o.deadline) : 'sem prazo';
+  o.deadline = novaData;
+  o.timeline.push({
+    time: 'Agora',
+    text: `Prazo alterado de "${oldDeadline}" para "${fmtTime(novaData)}"`
+  });
+
+  // Sincroniza com Firebase se for de lá
+  if (o.fromFirebase && o.firestoreId) {
+    try {
+      // Salvar como string DD/MM/YYYY (formato usado no banco)
+      const dataBR = `${String(novaData.getDate()).padStart(2,'0')}/${String(novaData.getMonth()+1).padStart(2,'0')}/${novaData.getFullYear()}`;
+      await updateDoc(doc(db, 'chamados', o.firestoreId), {
+        dataConclusao: dataBR
+      });
+    } catch (err) {
+      console.error('Erro ao salvar prazo no Firebase:', err);
+    }
+  }
+
+  openDetail(orderId);
+  render();
+  if (document.body.classList.contains('kanban-mode')) renderKanban();
+}
+
+
 function priorityLabel(p) {
   return { crit: 'CRÍT', high: 'ALTA', med: 'MÉDIA', low: 'BAIXA' }[p] || p.toUpperCase();
 }
@@ -2287,7 +2466,23 @@ function openDetail(id) {
           </div>
           <div>
             <div class="detail-label">Prazo</div>
-            <div class="detail-value">${fmtTime(o.deadline)}</div>
+            <div class="prazo-current" id="prazoView_${o.id.replace(/[^a-zA-Z0-9]/g,'_')}">
+              <span class="prazo-current-text">${fmtTime(o.deadline)}</span>
+              <button class="prazo-edit-btn" data-edit-prazo="${o.id}">Alterar</button>
+            </div>
+            <div class="prazo-edit" id="prazoEdit_${o.id.replace(/[^a-zA-Z0-9]/g,'_')}" style="display:none;">
+              <div class="prazo-input-wrap">
+                <input type="datetime-local" class="prazo-input" data-prazo-input="${o.id}" value="${toLocalDatetime(o.deadline)}">
+                <button class="prazo-save-btn" data-save-prazo="${o.id}">OK</button>
+              </div>
+              <div class="prazo-quick">
+                <button class="prazo-quick-btn" data-prazo-quick="${o.id}" data-quick="hoje">Hoje 18h</button>
+                <button class="prazo-quick-btn" data-prazo-quick="${o.id}" data-quick="amanha">Amanhã</button>
+                <button class="prazo-quick-btn" data-prazo-quick="${o.id}" data-quick="3d">+3 dias</button>
+                <button class="prazo-quick-btn" data-prazo-quick="${o.id}" data-quick="semana">+1 semana</button>
+                <button class="prazo-quick-btn" data-prazo-quick="${o.id}" data-quick="cancel">Cancelar</button>
+              </div>
+            </div>
           </div>
           <div>
             <div class="detail-label">Restante</div>
@@ -2421,6 +2616,9 @@ function openDetail(id) {
   
   // Bind editor de responsável
   bindAssigneeEditor(o.id);
+
+  // Bind editor de prazo
+  bindPrazoEditor(o.id);
 
   // Toggle checklist
   document.querySelectorAll('#detailContent .checklist-item').forEach(el => {

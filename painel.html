@@ -3033,23 +3033,7 @@ document.querySelectorAll('#kanbanBucketChips .chip').forEach(c => {
 });
 
 // === Navegação entre views ===
-function switchView(view) {
-  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-  if (view === 'kanban') {
-    document.body.classList.add('kanban-mode');
-    document.getElementById('kanbanView').classList.add('active');
-    document.getElementById('navKanban').classList.add('active');
-    renderKanban();
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  } else {
-    document.body.classList.remove('kanban-mode');
-    document.getElementById('kanbanView').classList.remove('active');
-    document.getElementById('navHome').classList.add('active');
-  }
-}
-
-document.getElementById('navKanban').addEventListener('click', () => switchView('kanban'));
-document.getElementById('navHome').addEventListener('click', () => switchView('home'));
+// switchView consolidada abaixo (suporta home, kanban, agenda)
 
 
 
@@ -3522,7 +3506,6 @@ document.getElementById('agendaTodayBtn').addEventListener('click', () => {
 });
 
 // Atualizar switchView pra suportar agenda
-const switchViewOriginal = switchView;
 window.switchView = function(view) {
   document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
   document.body.classList.remove('kanban-mode', 'agenda-mode');

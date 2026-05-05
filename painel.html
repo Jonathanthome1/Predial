@@ -1823,6 +1823,80 @@ body.agenda-mode .fab { display: none; }
   cursor: pointer;
 }
 
+
+.setor-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+}
+.setor-current-text {
+  font-size: 14px;
+  line-height: 1.5;
+  flex: 1;
+}
+.setor-edit-btn {
+  background: none;
+  border: 1px solid var(--line-2);
+  color: var(--ink-mute);
+  padding: 6px 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.setor-edit-btn:hover { color: var(--ink); border-color: var(--orange); }
+.setor-edit { margin-top: 4px; }
+.setor-input-wrap {
+  display: flex;
+  gap: 6px;
+}
+.setor-select {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-bottom: 2px solid var(--steel);
+  color: var(--ink);
+  padding: 10px 12px;
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+  color-scheme: dark;
+}
+.setor-select:focus { border-bottom-color: var(--orange); }
+.setor-select option { background: var(--bg-2); color: var(--ink); }
+.setor-custom-input {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-bottom: 2px solid var(--steel);
+  color: var(--ink);
+  padding: 10px 12px;
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+}
+.setor-custom-input:focus { border-bottom-color: var(--orange); }
+.setor-save-btn {
+  background: var(--orange);
+  color: var(--bg);
+  border: none;
+  padding: 0 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.setor-save-btn:hover { background: var(--orange-soft); color: var(--paper); }
+
+
 @media (max-width: 480px) {
   .photo-gallery-painel { grid-template-columns: repeat(3, 1fr); }
 }
@@ -2456,6 +2530,112 @@ async function savePrazo(orderId, valor) {
 }
 
 
+
+// === EDITOR DE SETOR ===
+function bindSetorEditor(orderId) {
+  const safeId = orderId.replace(/[^a-zA-Z0-9]/g, '_');
+  const editBtn = document.querySelector('[data-edit-setor="' + orderId + '"]');
+  const saveBtn = document.querySelector('[data-save-setor="' + orderId + '"]');
+  const select = document.querySelector('[data-setor-select="' + orderId + '"]');
+  const customInput = document.querySelector('[data-setor-custom="' + orderId + '"]');
+  const viewBlock = document.getElementById('setorView_' + safeId);
+  const editBlock = document.getElementById('setorEdit_' + safeId);
+
+  if (!editBtn || !saveBtn || !select) return;
+
+  // Pré-selecionar o setor atual no dropdown (se existir)
+  const o = orders.find(x => x.id === orderId);
+  if (o) {
+    const opcoes = Array.from(select.options).map(opt => opt.value);
+    if (opcoes.includes(o.local)) {
+      select.value = o.local;
+    } else {
+      // Setor atual não está na lista padrão - usar opção "Outro" e preencher input
+      select.value = '__custom__';
+      customInput.value = o.local;
+      customInput.style.display = 'block';
+    }
+  }
+
+  editBtn.addEventListener('click', () => {
+    viewBlock.style.display = 'none';
+    editBlock.style.display = 'block';
+    select.focus();
+  });
+
+  // Mostrar/esconder input customizado quando seleciona "Outro"
+  select.addEventListener('change', () => {
+    if (select.value === '__custom__') {
+      customInput.style.display = 'block';
+      customInput.focus();
+    } else {
+      customInput.style.display = 'none';
+    }
+  });
+
+  saveBtn.addEventListener('click', () => salvarSetor(orderId));
+
+  customInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      salvarSetor(orderId);
+    } else if (e.key === 'Escape') {
+      viewBlock.style.display = 'flex';
+      editBlock.style.display = 'none';
+    }
+  });
+}
+
+async function salvarSetor(orderId) {
+  const select = document.querySelector('[data-setor-select="' + orderId + '"]');
+  const customInput = document.querySelector('[data-setor-custom="' + orderId + '"]');
+  if (!select) return;
+
+  let novoSetor;
+  if (select.value === '__custom__') {
+    novoSetor = (customInput.value || '').trim();
+    if (!novoSetor) {
+      alert('Digite o nome do setor.');
+      customInput.focus();
+      return;
+    }
+  } else {
+    novoSetor = select.value;
+  }
+
+  const o = orders.find(x => x.id === orderId);
+  if (!o) return;
+
+  if (o.local === novoSetor) {
+    const safeId = orderId.replace(/[^a-zA-Z0-9]/g, '_');
+    document.getElementById('setorView_' + safeId).style.display = 'flex';
+    document.getElementById('setorEdit_' + safeId).style.display = 'none';
+    return;
+  }
+
+  const oldSetor = o.local;
+  o.local = novoSetor;
+  o.timeline.push({
+    time: 'Agora',
+    text: 'Setor alterado de "' + oldSetor + '" para "' + novoSetor + '"'
+  });
+
+  // Sincroniza com Firebase se for de lá
+  if (o.fromFirebase && o.firestoreId) {
+    try {
+      await updateDoc(doc(db, 'chamados', o.firestoreId), { setor: novoSetor });
+    } catch (err) {
+      console.error('Erro ao salvar setor no Firebase:', err);
+    }
+  }
+
+  openDetail(orderId);
+  render();
+  if (document.body.classList.contains('kanban-mode')) renderKanban();
+  if (document.body.classList.contains('agenda-mode')) renderAgenda();
+}
+
+
 function priorityLabel(p) {
   return { crit: 'CRÍT', high: 'ALTA', med: 'MÉDIA', low: 'BAIXA' }[p] || p.toUpperCase();
 }
@@ -2827,8 +3007,33 @@ function openDetail(id) {
       <div class="detail-section">
         <div class="detail-grid">
           <div>
-            <div class="detail-label">Local</div>
-            <div class="detail-value">${o.local}</div>
+            <div class="detail-label">Setor</div>
+            <div class="setor-current" id="setorView_${o.id.replace(/[^a-zA-Z0-9]/g,'_')}">
+              <span class="setor-current-text">${o.local}</span>
+              <button class="setor-edit-btn" data-edit-setor="${o.id}">Alterar</button>
+            </div>
+            <div class="setor-edit" id="setorEdit_${o.id.replace(/[^a-zA-Z0-9]/g,'_')}" style="display:none;">
+              <div class="setor-input-wrap">
+                <select class="setor-select" data-setor-select="${o.id}">
+                  <option value="Administrativo">Administrativo</option>
+                  <option value="Confeitaria">Confeitaria</option>
+                  <option value="Cozinha">Cozinha</option>
+                  <option value="Cozinha Conf.">Cozinha Conf.</option>
+                  <option value="Diretoria">Diretoria</option>
+                  <option value="Embalação">Embalação</option>
+                  <option value="Expedição">Expedição</option>
+                  <option value="Frota">Frota</option>
+                  <option value="Limpeza">Limpeza</option>
+                  <option value="Panificação">Panificação</option>
+                  <option value="Predial">Predial</option>
+                  <option value="Recebimento">Recebimento</option>
+                  <option value="Refeitório">Refeitório</option>
+                  <option value="__custom__">Outro (digitar)</option>
+                </select>
+                <button class="setor-save-btn" data-save-setor="${o.id}">OK</button>
+              </div>
+              <input type="text" class="setor-custom-input" data-setor-custom="${o.id}" placeholder="Digite o setor/local..." style="display:none; margin-top:8px;">
+            </div>
           </div>
           <div>
             <div class="detail-label">Responsável</div>
@@ -3006,6 +3211,9 @@ function openDetail(id) {
 
   // Bind editor de prazo
   bindPrazoEditor(o.id);
+
+  // Bind editor de setor
+  bindSetorEditor(o.id);
 
   // Renderizar fotos
   renderFotosPainel(o.id);

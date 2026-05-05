@@ -229,6 +229,137 @@
 
   .vinda-area-tag { display: inline-block; padding: 2px 8px; background: rgba(16,185,129,0.15); color: var(--verde); border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 6px; }
 
+  
+  /* === FOTOS === */
+  .photo-upload-area {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .photo-thumb-mini {
+    aspect-ratio: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-thumb-mini img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .photo-thumb-mini .photo-remove {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 22px; height: 22px;
+    background: rgba(239, 68, 68, 0.9);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+  }
+  .photo-add-btn {
+    aspect-ratio: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .photo-add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .photo-add-btn-label {
+    font-size: 9px;
+    letter-spacing: 0.05em;
+  }
+  .photo-input-hidden {
+    display: none;
+  }
+  
+  /* Galeria de fotos no detalhe */
+  .photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .photo-item {
+    aspect-ratio: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+  .photo-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s;
+  }
+  .photo-item:hover img {
+    transform: scale(1.05);
+  }
+  .photo-item-meta {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85));
+    color: white;
+    font-size: 9px;
+    padding: 12px 6px 4px;
+    text-align: center;
+    pointer-events: none;
+  }
+  .photo-item-warn {
+    color: var(--amarelo);
+    font-weight: 600;
+  }
+  
+  /* Lightbox */
+  .photo-lightbox {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .photo-lightbox.open { display: flex; }
+  .photo-lightbox img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+  }
+  .photo-lightbox-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+  }
+
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
@@ -333,6 +464,17 @@
         <option value="Alta">🟡 Alta</option>
         <option value="Urgente">🔴 Urgente</option>
       </select>
+    </div>
+    <div class="card">
+      <div class="card-label">Fotos (opcional)</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">Até 5 fotos. Vencem em 90 dias.</div>
+      <div class="photo-upload-area" id="novo-photos-area">
+        <button type="button" class="photo-add-btn" onclick="document.getElementById('novo-photos-input').click()">
+          <span>📷</span>
+          <span class="photo-add-btn-label">Adicionar</span>
+        </button>
+      </div>
+      <input type="file" class="photo-input-hidden" id="novo-photos-input" accept="image/*" multiple onchange="adicionarFotos('novo', this.files)" />
     </div>
     <button class="btn btn-primary" id="novo-btn" onclick="salvarChamado()">Abrir chamado ✓</button>
   </div>
@@ -477,6 +619,17 @@
         <option value="Urgente">🔴 Urgente</option>
       </select>
     </div>
+    <div class="card">
+      <div class="card-label">Fotos (opcional)</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">Até 5 fotos. Vencem em 90 dias.</div>
+      <div class="photo-upload-area" id="area-photos-area">
+        <button type="button" class="photo-add-btn" onclick="document.getElementById('area-photos-input').click()">
+          <span>📷</span>
+          <span class="photo-add-btn-label">Adicionar</span>
+        </button>
+      </div>
+      <input type="file" class="photo-input-hidden" id="area-photos-input" accept="image/*" multiple onchange="adicionarFotos('area', this.files)" />
+    </div>
     <button class="btn btn-primary" id="area-novo-btn" style="background:var(--verde);" onclick="salvarRequisicaoArea()">Enviar requisição ✓</button>
   </div>
 </div>
@@ -515,6 +668,108 @@ const db = getFirestore(app);
 // === CONFIG PAINEL ===
 const SENHA_PAINEL = "1234";
 const URL_PAINEL = "https://jonathanthome1.github.io/Predial/painel";
+
+// === FOTOS ===
+const NOVO_PHOTOS = { 'novo': [], 'area': [] };
+const MAX_PHOTOS = 5;
+const FOTO_VALIDADE_DIAS = 90;
+
+async function comprimirImagem(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_W = 1024;
+        let w = img.width, h = img.height;
+        if (w > MAX_W) {
+          h = h * (MAX_W / w);
+          w = MAX_W;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.70);
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function adicionarFotos(tipo, files) {
+  if (!files || !files.length) return;
+  const arr = NOVO_PHOTOS[tipo];
+  for (const file of files) {
+    if (arr.length >= MAX_PHOTOS) {
+      alert('Máximo de ' + MAX_PHOTOS + ' fotos por demanda.');
+      break;
+    }
+    if (!file.type.startsWith('image/')) continue;
+    try {
+      const dataUrl = await comprimirImagem(file);
+      const tamKB = (dataUrl.length * 0.75) / 1024;
+      if (tamKB > 700) {
+        alert('Foto muito grande mesmo após compressão (' + Math.round(tamKB) + 'KB). Use uma foto menor.');
+        continue;
+      }
+      arr.push(dataUrl);
+    } catch(e) {
+      console.error('Erro ao processar foto:', e);
+    }
+  }
+  renderFotosUpload(tipo);
+  document.getElementById(tipo === 'novo' ? 'novo-photos-input' : 'area-photos-input').value = '';
+}
+
+function removerFoto(tipo, idx) {
+  NOVO_PHOTOS[tipo].splice(idx, 1);
+  renderFotosUpload(tipo);
+}
+
+function renderFotosUpload(tipo) {
+  const areaId = tipo === 'novo' ? 'novo-photos-area' : 'area-photos-area';
+  const inputId = tipo === 'novo' ? 'novo-photos-input' : 'area-photos-input';
+  const area = document.getElementById(areaId);
+  if (!area) return;
+  const arr = NOVO_PHOTOS[tipo];
+  let html = '';
+  arr.forEach((url, idx) => {
+    html += '<div class="photo-thumb-mini">' +
+            '<img src="' + url + '" alt="" />' +
+            '<button class="photo-remove" data-tipo="' + tipo + '" data-idx="' + idx + '" onclick="removerFoto(this.dataset.tipo, parseInt(this.dataset.idx))">×</button>' +
+            '</div>';
+  });
+  if (arr.length < MAX_PHOTOS) {
+    html += '<button type="button" class="photo-add-btn" onclick="document.getElementById(\'' + inputId + '\').click()">' +
+            '<span>📷</span><span class="photo-add-btn-label">Adicionar</span>' +
+            '</button>';
+  }
+  area.innerHTML = html;
+}
+
+function abrirLightbox(url) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('photo-lightbox').classList.add('open');
+}
+function fecharLightbox() {
+  document.getElementById('photo-lightbox').classList.remove('open');
+}
+
+function calcularExpiracao() {
+  return Date.now() + (FOTO_VALIDADE_DIAS * 24 * 60 * 60 * 1000);
+}
+
+window.adicionarFotos = adicionarFotos;
+window.removerFoto = removerFoto;
+window.abrirLightbox = abrirLightbox;
+window.fecharLightbox = fecharLightbox;
+
+
 
 let chamados = [];
 let filtroAtivo = 'todos';
@@ -671,6 +926,12 @@ async function salvarRequisicaoArea() {
   const setorFinal = areaSelecionada.nome + (local ? ' · ' + local : '');
 
   try {
+    const fotosReq = NOVO_PHOTOS['area'].map(url => ({
+      data: url,
+      addedBy: solicitante || areaSelecionada.nome,
+      addedAt: Date.now(),
+      expiresAt: calcularExpiracao()
+    }));
     await addDoc(collection(db, 'chamados'), {
       setor: setorFinal,
       solicitante: solicitante,
@@ -686,6 +947,7 @@ async function salvarRequisicaoArea() {
       dataConclusao: null,
       horaConclusao: null,
       observacaoConclusao: '',
+      fotos: fotosReq,
       historico: [{
         acao: 'Requisição aberta pela área ' + areaSelecionada.nome,
         data: hoje(),
@@ -694,6 +956,7 @@ async function salvarRequisicaoArea() {
       }],
       timestamp: Date.now()
     });
+    NOVO_PHOTOS['area'] = [];
     // Limpar campos
     document.getElementById('area-novo-solicitante').value = '';
     document.getElementById('area-novo-local').value = '';
@@ -737,6 +1000,8 @@ function goTo(id){
     document.getElementById('area-novo-titulo').value='';
     document.getElementById('area-novo-descricao').value='';
     document.getElementById('area-novo-prioridade').value='Normal';
+    NOVO_PHOTOS['area'] = [];
+    renderFotosUpload('area');
     const b=document.getElementById('area-novo-btn');
     if(b){b.textContent='Enviar requisição ✓';b.disabled=false;}
   }
@@ -748,6 +1013,8 @@ function goTo(id){
     document.getElementById('novo-titulo').value='';
     document.getElementById('novo-descricao').value='';
     document.getElementById('novo-prioridade').value='Normal';
+    NOVO_PHOTOS['novo'] = [];
+    renderFotosUpload('novo');
     const b=document.getElementById('novo-btn');
     if(b){b.textContent='Abrir chamado ✓';b.disabled=false;}
     // Listener pra mostrar campo "Outro" quando selecionado
@@ -865,15 +1132,23 @@ async function salvarChamado(){
   const btn=document.getElementById('novo-btn');
   btn.textContent='Salvando...';btn.disabled=true;
   try{
+    const fotos = NOVO_PHOTOS['novo'].map(url => ({
+      data: url,
+      addedBy: solicitante || 'Solicitante',
+      addedAt: Date.now(),
+      expiresAt: calcularExpiracao()
+    }));
     await addDoc(collection(db,'chamados'),{
       setor:setor, solicitante:solicitante, titulo:titulo, descricao:descricao, prioridade:prioridade,
       status:'aberto',
       dataAbertura:hoje(), horaAbertura:agora(),
       dataConclusao:null, horaConclusao:null,
       observacaoConclusao:'',
+      fotos: fotos,
       historico:[{acao:'Chamado aberto',data:hoje(),hora:agora(),obs:solicitante?'Por: '+solicitante:''}],
       timestamp:Date.now()
     });
+    NOVO_PHOTOS['novo'] = [];
     goTo('s-lista');
   }catch(e){alert('Erro: '+e.message);btn.textContent='Abrir chamado ✓';btn.disabled=false;}
 }
@@ -952,6 +1227,21 @@ function renderDetalhe(){
       <div class="card-label">Descrição do problema</div>
       <div style="font-size:14px;color:var(--text-primary);line-height:1.5;white-space:pre-wrap;">${c.descricao}</div>
     </div>
+
+    ${(c.fotos && c.fotos.length > 0) ? `
+    <div class="card">
+      <div class="card-label">Fotos (${c.fotos.length})</div>
+      <div class="photo-gallery">
+        ${c.fotos.map((f, idx) => {
+          const diasRestantes = Math.max(0, Math.ceil((f.expiresAt - Date.now()) / (24*60*60*1000)));
+          const venceEm = diasRestantes <= 7 ? '<div class="photo-item-meta photo-item-warn">Vence em '+diasRestantes+'d</div>' : '';
+          return `<div class="photo-item" onclick="abrirLightbox('${f.data}')">
+            <img src="${f.data}" alt="Foto ${idx+1}" />
+            ${venceEm}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
 
     ${c.observacaoConclusao?`<div class="card" style="border-left:3px solid var(--verde);">
       <div class="card-label">Observação de conclusão</div>
@@ -1064,5 +1354,12 @@ window.salvarRequisicaoArea=salvarRequisicaoArea;
 window.renderAreasGrid=renderAreasGrid;
 
 </script>
+
+<!-- LIGHTBOX FOTO -->
+<div class="photo-lightbox" id="photo-lightbox" onclick="fecharLightbox()">
+  <button class="photo-lightbox-close" onclick="event.stopPropagation();fecharLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="" />
+</div>
+
 </body>
 </html>

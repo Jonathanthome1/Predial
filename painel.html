@@ -1718,6 +1718,116 @@ body.agenda-mode .fab { display: none; }
 }
 
 
+
+/* === FOTOS NO PAINEL === */
+.photo-gallery-painel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+.photo-painel-item {
+  aspect-ratio: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.photo-painel-item:hover {
+  border-color: var(--orange);
+}
+.photo-painel-item img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.photo-painel-meta {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  padding: 14px 6px 4px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-align: center;
+  pointer-events: none;
+}
+.photo-painel-meta.warn { color: var(--yellow); font-weight: 600; }
+.photo-painel-remove {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 22px; height: 22px;
+  background: rgba(193, 63, 63, 0.9);
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  z-index: 2;
+}
+.photo-painel-add {
+  aspect-ratio: 1;
+  background: var(--bg-2);
+  border: 1.5px dashed var(--line-2);
+  color: var(--ink-mute);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.photo-painel-add:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+.photo-painel-add svg {
+  width: 24px; height: 24px;
+}
+
+/* Lightbox painel */
+.painel-lightbox {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.painel-lightbox.open { display: flex; }
+.painel-lightbox img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+}
+.painel-lightbox-close {
+  position: absolute;
+  top: 20px; right: 20px;
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .photo-gallery-painel { grid-template-columns: repeat(3, 1fr); }
+}
+
+
 @media (max-width: 480px) {
   .toast-container { top: 12px; right: 12px; left: 12px; max-width: none; }
   .toast { min-width: auto; }
@@ -2514,6 +2624,7 @@ function render() {
             <span class="priority-tag ${cls}">${o.status === 'done' ? 'OK' : o.status === 'waiting_part' ? 'PEÇA' : o.status === 'waiting_auth' ? 'AUTORIZ.' : o.status === 'paused' ? 'PAUSA' : priorityLabel(o.priority)}</span>
             <span>${typeLabel(o.type)}</span>
             ${o.origem === 'requisicao_area' ? '<span class="req-badge">📨 ' + (o.areaOrigem || 'ÁREA') + '</span>' : ''}
+            ${(o.fotos && o.fotos.length > 0) ? '<span style="color: var(--orange);">📷 ' + o.fotos.length + '</span>' : ''}
             ${o.status === 'progress' ? '<span style="color: var(--orange);">● EM EXECUÇÃO</span>' : ''}
           </div>
           <div class="order-title">${o.title}</div>
@@ -2796,14 +2907,10 @@ function openDetail(id) {
       </div>` : ''}
 
       <div class="detail-section">
-        <div class="detail-label">Fotos / Evidências</div>
-        <div class="photo-row">
-          <div class="photo-thumb">FOTO 1</div>
-          <div class="photo-thumb">FOTO 2</div>
-          <div class="photo-add" title="Adicionar foto">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          </div>
-        </div>
+        <div class="detail-label">Fotos (${(o.fotos || []).length})</div>
+        <div style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); letter-spacing: 0.1em; margin-bottom: 8px;">As fotos vencem em 90 dias após o upload</div>
+        <div class="photo-gallery-painel" id="painel-photos-${o.id.replace(/[^a-zA-Z0-9]/g,'_')}"></div>
+        <input type="file" id="painel-photo-input-${o.id.replace(/[^a-zA-Z0-9]/g,'_')}" accept="image/*" multiple style="display:none;" />
       </div>
 
       <div class="detail-section">
@@ -2835,6 +2942,17 @@ function openDetail(id) {
           <button id="addComment" data-id="${o.id}">Enviar</button>
         </div>
       </div>
+
+      ${o.fromFirebase ? `
+      <div class="detail-section" style="border-top: 1px solid var(--line); padding-top: 24px; margin-top: 8px;">
+        <button data-delete-order="${o.id}" style="width: 100%; padding: 14px; background: transparent; border: 1px solid rgba(193, 63, 63, 0.4); color: var(--red); font-family: var(--mono); font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; font-weight: 600; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.background='rgba(193, 63, 63, 0.1)'; this.style.borderColor='var(--red)';" onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(193, 63, 63, 0.4)';">
+          🗑 Excluir esta tarefa
+        </button>
+        <div style="font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--ink-mute); text-align: center; margin-top: 8px; text-transform: uppercase;">Esta ação não pode ser desfeita</div>
+      </div>` : `
+      <div class="detail-section" style="border-top: 1px solid var(--line); padding-top: 20px; margin-top: 8px;">
+        <div style="font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--ink-mute); text-align: center; text-transform: uppercase;">Demanda histórica · não pode ser excluída</div>
+      </div>`}
     </div>
   `;
   modalDetail.classList.add('open');
@@ -2888,6 +3006,41 @@ function openDetail(id) {
 
   // Bind editor de prazo
   bindPrazoEditor(o.id);
+
+  // Renderizar fotos
+  renderFotosPainel(o.id);
+
+  // Bind botão de excluir
+  const deleteBtn = document.querySelector('#detailContent [data-delete-order]');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', async () => {
+      const orderId = deleteBtn.dataset.deleteOrder;
+      const o2 = orders.find(x => x.id === orderId);
+      if (!o2) return;
+      const confirmar = confirm(
+        'Excluir definitivamente esta tarefa?\n\n' +
+        '"' + o2.title + '"\n\n' +
+        'Essa ação não pode ser desfeita.'
+      );
+      if (!confirmar) return;
+      
+      // Excluir do Firebase se tiver
+      if (o2.fromFirebase && o2.firestoreId) {
+        try {
+          await deleteDoc(doc(db, 'chamados', o2.firestoreId));
+        } catch (err) {
+          alert('Erro ao excluir: ' + err.message);
+          return;
+        }
+      }
+      // Remover localmente
+      orders = orders.filter(x => x.id !== orderId);
+      modalDetail.classList.remove('open');
+      render();
+      if (document.body.classList.contains('kanban-mode')) renderKanban();
+      if (document.body.classList.contains('agenda-mode')) renderAgenda();
+    });
+  }
 
   // Toggle checklist
   document.querySelectorAll('#detailContent .checklist-item').forEach(el => {
@@ -3261,7 +3414,8 @@ function fbToOrder(doc) {
     fromFirebase: true,
     origem: c.origem || 'chamado',
     areaOrigem: c.areaOrigem || null,
-    solicitante: c.solicitante || ''
+    solicitante: c.solicitante || '',
+    fotos: c.fotos || []
   };
 }
 
@@ -3571,6 +3725,162 @@ document.getElementById('navHome').addEventListener('click', () => switchView('h
 document.getElementById('navKanban').addEventListener('click', () => switchView('kanban'));
 
 
+
+// === FOTOS NO PAINEL ===
+const FOTO_VALIDADE_MS = 90 * 24 * 60 * 60 * 1000;
+
+async function comprimirImagemPainel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_W = 1024;
+        let w = img.width, h = img.height;
+        if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.70));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function abrirLightboxPainel(url) {
+  document.getElementById('painel-lightbox-img').src = url;
+  document.getElementById('painel-lightbox').classList.add('open');
+}
+
+function fecharLightboxPainel() {
+  document.getElementById('painel-lightbox').classList.remove('open');
+}
+
+function renderFotosPainel(orderId) {
+  const o = orders.find(x => x.id === orderId);
+  if (!o) return;
+  const safeId = orderId.replace(/[^a-zA-Z0-9]/g, '_');
+  const container = document.getElementById('painel-photos-' + safeId);
+  if (!container) return;
+  
+  const fotos = o.fotos || [];
+  let html = '';
+  
+  fotos.forEach((f, idx) => {
+    const diasRest = Math.max(0, Math.ceil((f.expiresAt - Date.now()) / (24*60*60*1000)));
+    const aviso = diasRest <= 7 ? 'warn' : '';
+    const textoMeta = diasRest <= 7 ? 'Vence em ' + diasRest + 'd' : (f.addedBy || 'Foto');
+    const podeRemover = o.fromFirebase ? '<button class="photo-painel-remove" data-idx="' + idx + '" data-id="' + orderId + '" onclick="event.stopPropagation();removerFotoPainel(this.dataset.id, parseInt(this.dataset.idx))">×</button>' : '';
+    html += '<div class="photo-painel-item" onclick="abrirLightboxPainel(\''+f.data.replace(/'/g,"\\'")+'\')">' +
+            podeRemover +
+            '<img src="' + f.data + '" alt="" />' +
+            '<div class="photo-painel-meta ' + aviso + '">' + textoMeta + '</div>' +
+            '</div>';
+  });
+  
+  // Botão de adicionar (até 5 fotos no total)
+  if (fotos.length < 5 && o.fromFirebase) {
+    html += '<button class="photo-painel-add" onclick="document.getElementById(\'painel-photo-input-' + safeId + '\').click()">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>' +
+            '<span>Adicionar</span>' +
+            '</button>';
+  } else if (!o.fromFirebase && fotos.length === 0) {
+    html = '<div style="grid-column: 1/-1; color: var(--ink-mute); font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; padding: 14px; text-align: center;">Demanda histórica — fotos não disponíveis</div>';
+  }
+  
+  container.innerHTML = html;
+  
+  // Bind input
+  const input = document.getElementById('painel-photo-input-' + safeId);
+  if (input) {
+    input.onchange = async () => {
+      if (!input.files || !input.files.length) return;
+      const arr = [...(o.fotos || [])];
+      for (const file of input.files) {
+        if (arr.length >= 5) {
+          alert('Máximo de 5 fotos.');
+          break;
+        }
+        if (!file.type.startsWith('image/')) continue;
+        try {
+          const dataUrl = await comprimirImagemPainel(file);
+          const tamKB = (dataUrl.length * 0.75) / 1024;
+          if (tamKB > 700) {
+            alert('Foto muito grande (' + Math.round(tamKB) + 'KB). Use uma menor.');
+            continue;
+          }
+          arr.push({
+            data: dataUrl,
+            addedBy: 'Miguel K.',
+            addedAt: Date.now(),
+            expiresAt: Date.now() + FOTO_VALIDADE_MS
+          });
+        } catch (e) { console.error('Erro:', e); }
+      }
+      o.fotos = arr;
+      // Salvar no Firebase
+      if (o.fromFirebase && o.firestoreId) {
+        try {
+          await updateDoc(doc(db, 'chamados', o.firestoreId), { fotos: arr });
+        } catch (e) { console.error('Erro Firebase:', e); }
+      }
+      input.value = '';
+      renderFotosPainel(orderId);
+    };
+  }
+}
+
+async function removerFotoPainel(orderId, idx) {
+  if (!confirm('Remover esta foto?')) return;
+  const o = orders.find(x => x.id === orderId);
+  if (!o || !o.fotos) return;
+  o.fotos.splice(idx, 1);
+  if (o.fromFirebase && o.firestoreId) {
+    try {
+      await updateDoc(doc(db, 'chamados', o.firestoreId), { fotos: o.fotos });
+    } catch (e) { console.error('Erro:', e); }
+  }
+  renderFotosPainel(orderId);
+}
+
+// === LIMPEZA AUTOMÁTICA DE FOTOS VENCIDAS ===
+async function limparFotosVencidas() {
+  const agora = Date.now();
+  let docsLimpos = 0;
+  let fotosRemovidas = 0;
+  
+  for (const o of firebaseOrders) {
+    if (!o.fotos || !o.fotos.length) continue;
+    const fotosValidas = o.fotos.filter(f => !f.expiresAt || f.expiresAt > agora);
+    if (fotosValidas.length < o.fotos.length) {
+      const removidas = o.fotos.length - fotosValidas.length;
+      try {
+        await updateDoc(doc(db, 'chamados', o.firestoreId), { fotos: fotosValidas });
+        docsLimpos++;
+        fotosRemovidas += removidas;
+      } catch (e) {
+        console.error('Erro ao limpar fotos vencidas:', e);
+      }
+    }
+  }
+  
+  if (fotosRemovidas > 0) {
+    console.log('Limpeza: ' + fotosRemovidas + ' fotos vencidas removidas em ' + docsLimpos + ' demandas');
+  }
+}
+
+// Rodar limpeza 5s após carregar (espera Firebase carregar primeiro)
+setTimeout(limparFotosVencidas, 5000);
+
+window.abrirLightboxPainel = abrirLightboxPainel;
+window.fecharLightboxPainel = fecharLightboxPainel;
+window.removerFotoPainel = removerFotoPainel;
+
+
 function updateClock() {
   document.getElementById('dateLine').textContent = fmtTime(new Date());
 }
@@ -3582,5 +3892,9 @@ setInterval(updateGreeting, 60000);
 render();
 </script>
 <div class="toast-container" id="toastContainer"></div>
+<div class="painel-lightbox" id="painel-lightbox" onclick="fecharLightboxPainel()">
+  <button class="painel-lightbox-close" onclick="event.stopPropagation();fecharLightboxPainel()">✕</button>
+  <img id="painel-lightbox-img" src="" alt="" />
+</div>
 </body>
 </html>
